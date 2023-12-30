@@ -1,0 +1,66 @@
+body {
+    font-size: 16px;
+}
+.container {
+    width: 400px;
+    margin: 0 auto;
+    padding: 10px;
+}
+.messages {
+    height: 250px;
+    overflow-y: auto;
+    border: 1px solid #444;
+    padding: 5px;
+    margin-bottom: 5px;
+}
+.user-input {
+    display: flex;
+    margin-bottom: 20px;
+}
+.user-input input {
+    flex: 1;
+    border: 1px solid #444;
+    padding: 5px;
+}
+.user-input button {
+    margin-left: 5px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+.websocket {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+.websocket button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+.websocket .label {
+    margin-left: auto;
+}
+.temperature {
+    display: flex;
+    align-items: center;
+    /* justify-content: center; */
+    margin-bottom: 5px;
+}
+.temperature-label {
+    font-size: 1.5rem;
+    vertical-align: middle;
+    padding-bottom: 6px;
+}
+.temperature-value {
+    font-size: 3.0rem;
+    margin: 10px;
+}
+.temperature-units {
+    font-size: 1.4rem;
+}
+
