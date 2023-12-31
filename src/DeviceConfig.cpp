@@ -5,7 +5,7 @@
 #include <LittleFS.h>
 
 #include "DeviceConfig.h"
-#include "SerialCommand.h"
+#include "ConfigCommandHelper.h"
 
 #define CONFIG_CAPACITY 320
 #define CONFIGURATION_FILE_PATH "/config/device-config.json"
@@ -44,17 +44,14 @@ bool DeviceConfig::load() {
         ssid = doc[OPT_SSID].as<String>();
         password = doc[OPT_PASSWORD].as<String>();
         hostname = doc[OPT_HOSTNAME].as<String>();
-        address = doc[OPT_ADDRESS].as<String>();
-        gateway = doc[OPT_GATEWAY].as<String>();
-        subnet = doc[OPT_SUBNET].as<String>();
-        dns = doc[OPT_DNS].as<String>();
+        address.fromString(doc[OPT_ADDRESS].as<String>());
+        gateway.fromString(doc[OPT_GATEWAY].as<String>());
+        subnet.fromString(doc[OPT_SUBNET].as<String>());
+        dns.fromString(doc[OPT_DNS].as<String>());
         return true;
     }
     else {
-        ssid = "MYAP";
-        password = "";
-        hostname = "esp";
-        address = gateway = subnet = dns = "";
+        ssid = password = hostname = "";
     }
     return false;
 }
@@ -64,10 +61,10 @@ bool DeviceConfig::save() {
     doc[OPT_SSID] = ssid;
     doc[OPT_PASSWORD] = password;
     doc[OPT_HOSTNAME] = hostname;
-    doc[OPT_ADDRESS] = address;
-    doc[OPT_GATEWAY] = gateway;
-    doc[OPT_SUBNET] = subnet;
-    doc[OPT_DNS] = dns;
+    doc[OPT_ADDRESS] = address.toString();
+    doc[OPT_GATEWAY] = gateway.toString();
+    doc[OPT_SUBNET] = subnet.toString();
+    doc[OPT_DNS] = dns.toString();
     
     Serial.print(doc.memoryUsage()); Serial.print(" bytes capacity used of "); Serial.println(doc.capacity());
     String s; serializeJson(doc, s); Serial.println(s);
@@ -77,28 +74,33 @@ bool DeviceConfig::save() {
 
 bool DeviceConfig::processCommand(const String& cmd) {
     if (cmd == "show-config") {
-        const auto logP = [] (const String& s, const String& v) {
+        const auto log = [] (const String& s, const auto& v) {
             Serial.print(s); Serial.print(": "); Serial.println(v); };
-        logP(OPT_SSID, ssid);
-        logP(OPT_PASSWORD, password);
-        logP(OPT_HOSTNAME, hostname);
-        logP(OPT_ADDRESS, address);
-        logP(OPT_GATEWAY, gateway);
-        logP(OPT_SUBNET, subnet);
-        logP(OPT_DNS, dns);
+
+        // const auto logP = [] (const String& s, const String& v) {
+        //     Serial.print(s); Serial.print(": "); Serial.println(v); };
+        // const auto logPA = [] (const String& s, const IPAddress& v) {
+        //     Serial.print(s); Serial.print(": "); Serial.println(v); };
+        log(OPT_SSID, ssid);
+        log(OPT_PASSWORD, password);
+        log(OPT_HOSTNAME, hostname);
+        log(OPT_ADDRESS, address);
+        log(OPT_GATEWAY, gateway);
+        log(OPT_SUBNET, subnet);
+        log(OPT_DNS, dns);
     }
     else if (cmd == "save-config") {
         if (!save()) {
             Serial.println("Configuration writing FAILED");
         };
     }
-    else if (onPropertyDisplayOrChangeCommand(cmd, ssid, OPT_SSID)) {}
-    else if (onPropertyDisplayOrChangeCommand(cmd, password, OPT_PASSWORD)) {}
-    else if (onPropertyDisplayOrChangeCommand(cmd, hostname, OPT_HOSTNAME)) {}
-    else if (onPropertyDisplayOrChangeCommand(cmd, address, OPT_ADDRESS)) {}
-    else if (onPropertyDisplayOrChangeCommand(cmd, gateway, OPT_GATEWAY)) {}
-    else if (onPropertyDisplayOrChangeCommand(cmd, subnet, OPT_SUBNET)) {}
-    else if (onPropertyDisplayOrChangeCommand(cmd, dns, OPT_DNS)) {}
+    else if (ConfigCommandHelper::passPropertyDisplayOrChange(cmd, ssid, OPT_SSID)) {}
+    else if (ConfigCommandHelper::passPropertyDisplayOrChange(cmd, password, OPT_PASSWORD)) {}
+    else if (ConfigCommandHelper::passPropertyDisplayOrChange(cmd, hostname, OPT_HOSTNAME)) {}
+    else if (ConfigCommandHelper::passPropertyDisplayOrChange(cmd, address, OPT_ADDRESS)) {}
+    else if (ConfigCommandHelper::passPropertyDisplayOrChange(cmd, gateway, OPT_GATEWAY)) {}
+    else if (ConfigCommandHelper::passPropertyDisplayOrChange(cmd, subnet, OPT_SUBNET)) {}
+    else if (ConfigCommandHelper::passPropertyDisplayOrChange(cmd, dns, OPT_DNS)) {}
     else return false;
     return true;
 }

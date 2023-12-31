@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include "SerialCommand.h"
 
 SerialCommand::SerialCommand(int reserve) {
@@ -37,38 +36,4 @@ bool SerialCommand::update() {
 const String& SerialCommand::value() const {
     return _input;
 }
-
-unsigned int getCommandValueOffset(
-        const String& command, const String& option, char suffix) {
-    const auto optlen = option.length();
-    return (command.length() > optlen &&
-            command.startsWith(option) && suffix == command.charAt(optlen))
-        ? optlen + 1
-        : 0;
-}
-
-bool onPropertyChangeCommand(const String& command,
-        String& property, const String& option) {
-    const auto offset = getCommandValueOffset(command, option, '=');
-    if (offset > 0)  {
-        property = command.substring(offset);
-        return true;
-    }
-    return false;
-}
-
-bool onPropertyDisplayOrChangeCommand(const String& command,
-        String& property, const String& option) {
-    const auto offset = getCommandValueOffset(command, option, '=');
-    if (offset > 0)  {
-        property = command.substring(offset);
-        return true;
-    }
-    else if (getCommandValueOffset(command, option, '?')) {
-        Serial.println(property);
-        return true;
-    }
-    return false;
-}
-
 

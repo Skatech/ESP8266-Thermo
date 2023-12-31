@@ -10,20 +10,31 @@
 #include "DeviceConfig.h"
 #include "network.h"
 #include "webui.h"
-
-#include <OneWire.h>
-#include <DallasTemperature.h>
+#include "temperature.h"
 
 #define DS18B20_PIN D1
 
 SerialCommand scmd(64);
 DeviceConfig config;
+Temperature thermal(DS18B20_PIN);
 
-OneWire oneWire(DS18B20_PIN);
-DallasTemperature temperatureSensor(&oneWire);
+bool sendOrBroadcastTemperature(uint8_t addr = 0xff) {
+    return webSocketSendOrBroadcastText(String(">t:") 
+        + (thermal.isConnected() ? thermal.getTemperature() : -127.0f), addr);
+}
 
 void processCommand(const String& cmd) {
     if (config.processCommand(cmd)) {
+    }
+    else if (cmd == "show-status") {
+        Serial.println("Device MAC Address: " + WiFi.macAddress());
+        Serial.println("Connection state: " + (WiFi.status() == WL_CONNECTED
+            ? ("connected (" + WiFi.localIP().toString())
+            : ("disconnected (" + String(WiFi.status()))) + ')');
+        Serial.println("Temperature sensor: "
+         + (thermal.isConnected()
+            ? ("connected (" + String(thermal.getTemperature()) + "'C)")
+            : "disconnected"));
     }
     else if (cmd == "list-networks") {
         const int8_t count = WiFi.scanNetworks();
@@ -32,7 +43,7 @@ void processCommand(const String& cmd) {
         }
     }
     else Serial.println(
-        "Unknown command. Commands: list-networks, show-config, save-config, option?, option=VALUE");
+        "Unknown command. Commands: show-status, list-networks, show-config, save-config, option?, option=VALUE");
     Serial.println();
 }
 
@@ -83,44 +94,14 @@ void setup() {
     }
 
     initWebUI();
-    
-
-    temperatureSensor.setWaitForConversion(false);
-}
-
-//send temperature on connect
-//broadcast text messages
-
-
-float temperature = -125;
-bool sendOrBroadcastTemperature(uint8_t addr = 0xff) {
-    return webSocketSendOrBroadcastText(String(">t:") + temperature, addr);
 }
 
 void loop() { // exec times: mid=150us, max=31ms
-    static uint32_t counter = 0;
-    // const auto now = millis();
-
-
-    if (temperatureSensor.getDS18Count() < 1) {
-        if (counter & 0x1000UL)
-            temperatureSensor.begin();
-    }
-    else {
-        if (temperatureSensor.isConversionComplete()) { // 590ms since nowait request
-            const float t = temperatureSensor.getTempCByIndex(0); // 30 ms
-            if (t != temperature) {
-                temperature = t;
-                sendOrBroadcastTemperature();
-                Serial.printf("T = %fC\n", temperature);
-            }
-            temperatureSensor.requestTemperatures(); // 2ms - nowait with non-parasitic supply
-        }
+    if (thermal.loop()) {
+        sendOrBroadcastTemperature();   
     }
 
     if (watchConnection()) {
         loopWebUI();
     }
-
-    counter++;
 }

@@ -15,11 +15,4 @@ private:
     bool _ready;
 };
 
-unsigned int getCommandValueOffset(
-    const String& command, const String& option, char suffix);
-bool onPropertyChangeCommand(const String& command,
-        String& property, const String& option);
-bool onPropertyDisplayOrChangeCommand(const String& command,
-        String& property, const String& option);
-
 #endif

@@ -2,6 +2,7 @@
 #define DeviceConfig_h
 
 #include <Arduino.h>
+#include <ESP8266WiFi.h>
 
 class DeviceConfig {
 public:
@@ -17,10 +18,10 @@ public:
     String password;
     String hostname;
 
-    String address;
-    String gateway;
-    String subnet;
-    String dns;
+    IPAddress address;
+    IPAddress gateway;
+    IPAddress subnet;
+    IPAddress dns;
 
     bool load();
     bool save();

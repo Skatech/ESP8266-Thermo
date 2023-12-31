@@ -15,14 +15,9 @@ bool initNetBIOS(const String& hostname) {
 }
 
 bool initNetwork(const DeviceConfig& config) {
-    IPAddress ip, gw, sm, dn;
-    ip.fromString(config.address);
-    gw.fromString(config.gateway);
-    sm.fromString(config.subnet);
-    dn.fromString(config.dns);
     return WiFi.disconnect() && WiFi.mode(WIFI_STA)
-        && WiFi.config(ip, gw, sm, dn) && WiFi.hostname(config.hostname)
-        && initNetBIOS(config.hostname);
+        && WiFi.config(config.address, config.gateway, config.subnet, config.dns)
+        && WiFi.hostname(config.hostname) && initNetBIOS(config.hostname);
 }
 
 bool beginConnect(const String& ssid, const String& password) {
