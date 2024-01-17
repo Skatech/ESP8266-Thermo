@@ -21,14 +21,19 @@ function send_onclick() {
 }
 
 function connect_onclick() {
-  if(ws == null) {
-    ws = new WebSocket("ws://" + window.location.host + ":81");
-    document.getElementById("ws_state").innerHTML = "CONNECTING";
-    ws.onopen = ws_onopen;
-    ws.onclose = ws_onclose;
-    ws.onmessage = ws_onmessage;
-  } else
-    ws.close();
+  if (window.location.host.length < 1) {
+    console.log("Cant connect to ws, reason - no host")
+  }
+  else {
+    if (ws == null) {
+      ws = new WebSocket("ws://" + window.location.host + ":81");
+      ws.onopen = ws_onopen;
+      ws.onclose = ws_onclose;
+      ws.onmessage = ws_onmessage;
+      document.getElementById("ws_state").innerHTML = "CONNECTING";
+    } else
+      ws.close();
+  }
 }
 
 function ws_onopen() {
@@ -51,8 +56,28 @@ function ws_onmessage(e_msg) {
   console.log(e_msg.data);
   const temperaturePrefix = ">t:"
   if (e_msg.data.startsWith(temperaturePrefix)) {
-    document.getElementById("temperature-value").innerText = 
-      e_msg.data.substring(temperaturePrefix.length)
+    const temperature = Number.parseFloat(e_msg.data.substring(temperaturePrefix.length))
+    document.getElementById("temperature-value").innerText = temperature.toString()
+    if (temperature > -127.0) {
+      temperatureChart.addSample(Math.round((Date.now() - time) / 1000), temperature)
+      chartPanel.draw()    
+    }
+      //e_msg.data.substring(temperaturePrefix.length)
   }
   else update_text('<span style="color:blue">' + e_msg.data + '</span>');
 }
+
+function sendt(t) {
+  ws_onmessage({data:">t:" + t.toString()}) 
+}
+
+const chartPanel = new ChartPanel(
+  /**@type {HTMLCanvasElement}*/ (document.getElementById("chart-canvas")),
+  400, 250)
+
+chartPanel.defaultBounds.width = 5
+chartPanel.defaultBounds.height = 2
+const temperatureChart = new Chart("#007bff").withSampleLimit(60)
+chartPanel.addChart(temperatureChart)
+chartPanel.draw()
+const time = Date.now();

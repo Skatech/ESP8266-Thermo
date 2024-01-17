@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 
-<body>
+<body onload="connect_onclick()">
     <div class="container">
         <h2>ESP8266 WebSocket</h2>
         <div class="temperature">
@@ -17,7 +17,9 @@
             <span class="temperature-value" id="temperature-value">00</span>
             <sup class="temperature-units">&deg;C</sup>
         </div>
-
+        <div class="chart-container">
+            <canvas id="chart-canvas"></canvas>
+        </div>    
         <div class="websocket">
             <button class="connect-button" id="bt_connect" onclick="connect_onclick()">Connect</button>
             <span class="label">WebSocket: <span id="ws_state"><span style="color:blue">CLOSED</span></span></span>
@@ -29,7 +31,8 @@
         </div>
         <div class="sponsor">Sponsored by <a href="https://amazon.com/diyables">DIYables</a></div>
     </div>
-    <script type="text/javascript" src="./js/script.js"></script>
+    <script type="text/javascript" src="./js/uchart.js"></script>
+    <script type="text/javascript" src="./js/index.js"></script>
 </body>
 
 </html>
