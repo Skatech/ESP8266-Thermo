@@ -55,12 +55,43 @@ body {
     font-size: 1.5rem;
     vertical-align: middle;
     padding-bottom: 6px;
+    margin-right: 10px;
 }
 .temperature-value {
     font-size: 3.0rem;
-    margin: 10px;
+    margin-right: 10px;
 }
 .temperature-units {
     font-size: 1.4rem;
+}
+input[type=checkbox] {
+    cursor: pointer;
+    position: relative;
+    width: 5.625em;
+    height: 3em;
+    appearance: none;
+    background: #f1f1f1;        
+    outline: 1px solid #cacaca;
+    border-radius: 1.5em;
+    box-shadow: 0 0 0.37em rgba(0, 0, 0, 0.3);
+    transition: 0.3s;
+}
+input[type=checkbox]:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3em;
+    height: 3em;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0.15em 0.37em rgba(0, 0, 0, 0.3);
+    transition: 0.3s;
+}
+input:checked[type=checkbox] {
+    background: #03a9f4;
+}
+input:checked[type=checkbox]:before {
+    left: 2.625em;
 }
 

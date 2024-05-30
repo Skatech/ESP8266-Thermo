@@ -11,7 +11,8 @@
 ESP8266WebServer webServer(80);
 WebSocketsServer wsServer(81);
 
-bool sendOrBroadcastTemperature(uint8_t addr);
+void onWebSocketClientConnected(uint8_t addr);
+bool onWebSocketTextMessageIncoming(const String& text, uint8_t addr);
 
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t* payload, size_t length) {
     if (type == WStype_DISCONNECTED) {
@@ -21,13 +22,18 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t* payload, size_t length)
         IPAddress ip = wsServer.remoteIP(num);
         Serial.printf("[%u] Connected from %d.%d.%d.%d\n", num, ip[0], ip[1], ip[2], ip[3]);
         wsServer.sendTXT(num, "Connected");
-        sendOrBroadcastTemperature(num);
+        onWebSocketClientConnected(num);
     }
     else if (type == WStype_TEXT) {
         Serial.printf("[%u] Received text: %s\n", num, payload);
-        // String echoMessage = "Received:  " + String((char*)payload);
-        // wsServer.sendTXT(num, echoMessage);
-        wsServer.broadcastTXT((char*)payload);
+
+        if (onWebSocketTextMessageIncoming((char*)payload, num)) {
+        }
+        else {
+            // String echoMessage = "Received:  " + String((char*)payload);
+            // wsServer.sendTXT(num, echoMessage);
+            wsServer.broadcastTXT((char*)payload);
+        }
     }
     else if (type == WStype_BIN) {
             Serial.printf("[%u] get binary length: %u\n", num, length);

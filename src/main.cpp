@@ -11,16 +11,49 @@
 #include "network.h"
 #include "webui.h"
 #include "temperature.h"
+#include "button.h"
 
+#define BUTTON_BUILTIN D3
 #define DS18B20_PIN D1
+#define HEATER_PIN D2
 
 SerialCommand scmd(64);
 DeviceConfig config;
 Temperature thermal(DS18B20_PIN);
+bool heating = false;
+Button button(BUTTON_BUILTIN, true);
 
 bool sendOrBroadcastTemperature(uint8_t addr = 0xff) {
     return webSocketSendOrBroadcastText(String(">t:") 
         + (thermal.isConnected() ? thermal.getTemperature() : -127.0f), addr);
+}
+
+bool sendOrBroadcastSwitchState(uint8_t addr = 0xff) {
+    return webSocketSendOrBroadcastText(String(">s:")  + (uint8_t)heating, addr);
+}
+
+void onWebSocketClientConnected(uint8_t addr) {
+    sendOrBroadcastTemperature(addr);
+    sendOrBroadcastSwitchState(addr);
+}
+
+void switchHeating(bool on) {
+    if (heating != on) {
+        heating = on;
+        sendOrBroadcastSwitchState();
+        digitalWrite(HEATER_PIN, heating);
+        Serial.print("Heater state: ");
+        Serial.println(heating ? "ON" : "OFF");
+    }
+}
+
+bool onWebSocketTextMessageIncoming(const String& text, uint8_t addr) {
+    if(text.startsWith(">s:")) {
+        bool sw = text.substring(3) == "1";
+        switchHeating(sw);
+        return true;
+    }
+    return false;
 }
 
 void processCommand(const String& cmd) {
@@ -35,6 +68,7 @@ void processCommand(const String& cmd) {
          + (thermal.isConnected()
             ? ("connected (" + String(thermal.getTemperature()) + "'C)")
             : "disconnected"));
+        Serial.println(String("Heater state: ") + (heating ? "ON" : "OFF"));
     }
     else if (cmd == "list-networks") {
         const int8_t count = WiFi.scanNetworks();
@@ -57,6 +91,9 @@ void serialEvent() {
 void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
+
+    pinMode(HEATER_PIN, OUTPUT);
+    digitalWrite(HEATER_PIN, LOW);
 
     Serial.begin(SERIAL_SPEED);
     Serial.println("\n\n\n\n\nESP8266 - Thermal Sensing\nInitializing:"); 
@@ -98,10 +135,15 @@ void setup() {
 
 void loop() { // exec times: mid=150us, max=31ms
     if (thermal.loop()) {
-        sendOrBroadcastTemperature();   
+        sendOrBroadcastTemperature();
     }
 
     if (watchConnection()) {
         loopWebUI();
+    }
+
+    button.loop();
+    if (button.pressedFor() == 20) {
+        switchHeating(!heating);        
     }
 }
